@@ -2,12 +2,16 @@
 <resources>
 
     <string name="app_name">dType</string>
-    <string name="version">0.66</string>
+    <string name="version">0.71</string>
     <string name="clear_button">Clear</string>
     <string name="a">a</string>
     <string name="report">Report a Bug</string>
     <string name="copyright">Copyright 2013, Vsevolod Glumov</string>
     <string name="words">0</string>
-
+    <string name="announcement">dType project development is going to be suspended for an
+        undetermined period of time. You\'re free to continue using it in version 0.71 or even
+        contribute to the project in a form of a pull request on GitHub. I will accept any
+        reasonable contribution.
+    </string>
 </resources>
 

@@ -11,23 +11,65 @@ import android.view.WindowManager;
 import android.widget.Button;
 
 /**
- * dType Options Screen (opt)
- * @author vsevolod
- * Yes, I know, that this code can be much more compact. I'working on that.
+ * <h1>dType Options Screen</h1>
+ * Options screen is represented by the <code>OptionsActivity</code>.
+ * {@link #onCreate(android.os.Bundle) onCreate()} method is the generic
+ * Android method and contains all the necessary runtime code. It also assigns
+ * selected buttons on startup, retrieving the values from the database and applying them trough
+ * {@link #selectedTheme(int Theme, OptionsActivity optionsActivity) selectedTheme()},
+ * {@link #selectedFont(int Font, OptionsActivity optionsActivity) selectedFont()} and
+ * {@link #selectedSize(int Size, OptionsActivity optionsActivity) selectedSize()} methods.
+ * {@link #onKeyDown(int, android.view.KeyEvent) onKeyDown()} is also quite usual and it implements exiting the
+ * screen when <code>Back</code> or <code>Menu</code> buttons are pressed.
+ * <br /><br />
+ * Visually, <code>OptionsActivity</code> contains eleven buttons:
+ * <ol>
+ *     <li><code>Clear</code> calls the {@link #clearText(View view) clearText()}.</li>
+ *     <li><code>BtThemeGrey</code> calls the {@link #changeTheme(View v) changeTheme()} method.</li>
+ *     <li><code>BtThemeBlue</code> calls the {@link #changeTheme(View v) changeTheme()} method.</li>
+ *     <li><code>BtThemeDark</code> calls the {@link #changeTheme(View v) changeTheme()} method.</li>
+ *     <li><code>BtFontSans</code> calls the {@link #changeFont(View v) changeFont()} method.</li>
+ *     <li><code>BtFontSerif</code> calls the {@link #changeFont(View v) changeFont()} method.</li>
+ *     <li><code>BtFontMono</code> calls the {@link #changeFont(View v) changeFont()} method.</li>
+ *     <li><code>BtSizeSmall</code> calls the {@link #changeSize(View v) changeSize()} method.</li>
+ *     <li><code>BtSizeMid</code> calls the {@link #changeSize(View v) changeSize()} method.</li>
+ *     <li><code>BtSizeBig</code> calls the {@link #changeSize(View v) changeSize()} method.</li>
+ *     <li><code>ReportBug</code> calls {@link #addBug(View view) addBug()} method.</li>
+ * </ol>
+ * Note that {@link #changeTheme(View v) changeTheme()}, {@link #changeFont(View v) changeFont()},
+ * {@link #changeSize(View v) changeSize()} are working the same way only for different visual
+ * style variables (i.e. Theme, Size, Font): they implement a switch for one of the three buttons
+ * in the row pressed, and writes the corresponding value to the database. It also writes an
+ * <code>opt_changed</code> parameter, that when revealed by
+ * {@link net.wswld.dtype.writer.DTypeActivity} works as a signal, that the visual parameters
+ * should be renewed, based on the database values. These methods also call the corresponding
+ * {@link #selectedTheme(int Theme, OptionsActivity optionsActivity) selectedTheme()},
+ * {@link #selectedFont(int Font, OptionsActivity optionsActivity) selectedFont()} or
+ * {@link #selectedSize(int Size, OptionsActivity optionsActivity) selectedSize()} methods that change visual style of
+ * the selected button. I know this is far from ideal, but for now it is the way it is.
+ * <br /><br />
+ * {@link #clearText(View view) clearText()} works in a somehow similar way: it writes a null string to the database
+ * along with <code>cleared</code> boolean which then clears the output field in
+ * {@link net.wswld.dtype.writer.DTypeActivity}.
+ * <br /><br />
+ * {@link #addBug(View view) addBug()} simply opens the URL of the page for adding a new bug in the default
+ * browser. It calls the {@link #gotoURL(String) gotoURL()} method with the URL passed as a string.
  */
 public class OptionsActivity extends DTypeActivity {
-	@Override
+    /**
+     * Generic Android <code>onCreate</code> method.
+     * @param savedInstanceState
+     */
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.opt);
         
-        /**
-         * Enabling dithering for the whole window to ensure gradients shown right later.
-         */
+        // Enabling dithering for the whole window to ensure gradients shown right later.
 		getWindow().setFormat(PixelFormat.RGBA_8888);
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_DITHER);
 		
-		/** Theme selection routine */
+		// Theme selection routine
         SharedPreferences prefs = getSharedPreferences("com.dtype.writer", MODE_PRIVATE);
         int Theme = 1;
 		int Font = 1;
@@ -37,208 +79,138 @@ public class OptionsActivity extends DTypeActivity {
 		Font = prefs.getInt("font", Font);
 		Size = prefs.getInt("size", Size);
 		
-		/** Selecting theme */
-		switch(Theme){
-		case 1:
-			SelectThemeGrey (this);
-		break;
-		case 2:
-			SelectThemeBlue (this);		
-		break;
-		case 3:
-			SelectThemeDark (this);
-		break;
-		}
+		// Selecting theme
+		selectedTheme(Theme, this);
 		
-		/** Selecting font */
-		switch(Font){
-		case 1:
-			SelectFontSans (this);
-		break;
-		case 2:
-			SelectFontSerif (this);		
-		break;
-		case 3:
-			SelectFontMono (this);
-		break;
-		}
+		// Selecting font
+		selectedFont(Font, this);
 		
-		/** Selecting font size */
-		switch(Size){
-		case 1:
-			SelectSizeSmall (this);
-		break;
-		case 2:
-			SelectSizeMid (this);		
-		break;
-		case 3:
-			SelectSizeBig (this);
-		break;
-		}
+		// Selecting font size
+		selectedSize(Size, this);
 	};
-	
-	/**
-	 * On key down events.
-	 */
+
+    /**
+     * This method predictably handles the hardware key events. More particularly it handles exiting
+     * on <code>Menu</code> or <code>Back</code> buttons pressed.
+     * @param keyCode key code.
+     * @param event key event.
+     * @return
+     */
 	@Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
 		
-		/** Back to main on 'menu' pressed*/
+		// Back to main on 'menu' pressed
         if (keyCode == KeyEvent.KEYCODE_MENU) {
         	finish();
         };
 		
-        /** Back to main on 'back' pressed*/
+        // Back to main on 'back' pressed
         if (keyCode == KeyEvent.KEYCODE_BACK) {
         	finish();
         };
         return true;
     }
-    
-	/** Going to the AddBug page*/
-    public void AddBug (View view) {
-        goToUrl ( "https://github.com/wswld/dtype/issues/new");
-    };
-    
+
     /**
-     * Change theme to grey.
+     * This method changes the <code>int</code> value in the database, representing the color theme
+     * of the {@link net.wswld.dtype.writer.DTypeActivity}.
+     * @param v view.
      */
-    public void ChThemeGrey (View view) {
-    	int Theme = 1;
-    	SharedPreferences prefs = getSharedPreferences("com.dtype.writer", MODE_PRIVATE);
-    	SharedPreferences.Editor editor = prefs.edit();
+    public void changeTheme(View v) {
+
+        SharedPreferences prefs = getSharedPreferences("com.dtype.writer", MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+
+        int Theme = 0;
+
+        switch (v.getId()) {
+            case (R.id.BtThemeGrey):
+                Theme = 1;
+                break;
+            case (R.id.BtThemeBlue):
+                Theme = 2;
+                break;
+            case (R.id.BtThemeDark):
+                Theme = 3;
+                break;
+        }
+
+        selectedTheme(Theme, this);
+
         editor.putInt("theme", Theme);
+        editor.putBoolean("opt_changed", true);
         editor.commit(); // apply changes
-        
-		editor.putBoolean("opt_changed", true);
-        editor.commit(); // apply changes
-        SelectThemeGrey (this);
-    }
-    
-    /**
-     * Change theme to blue.
-     */
-    public void ChThemeBlue (View view) {
-    	int Theme = 2;
-    	SharedPreferences prefs = getSharedPreferences("com.dtype.writer", MODE_PRIVATE);
-    	SharedPreferences.Editor editor = prefs.edit();
-        editor.putInt("theme", Theme);
-        editor.commit(); // apply changes
-        
-		editor.putBoolean("opt_changed", true);
-        editor.commit(); // apply changes
-        SelectThemeBlue (this);
-    }
-    
-    /**
-     * Change theme to dark.
-     */
-    public void ChThemeDark (View view) {
-    	int Theme = 3;
-    	SharedPreferences prefs = getSharedPreferences("com.dtype.writer", MODE_PRIVATE);
-    	SharedPreferences.Editor editor = prefs.edit();
-        editor.putInt("theme", Theme);
-        editor.commit(); // apply changes
-        
-		editor.putBoolean("opt_changed", true);
-        editor.commit(); // apply changes
-        SelectThemeDark (this);
-    }
-    
-    /**
-     * Change font to sans-serif.
-     */
-    public void ChFontSans (View view) {
-    	int Font = 1;
-    	SharedPreferences prefs = getSharedPreferences("com.dtype.writer", MODE_PRIVATE);
-    	SharedPreferences.Editor editor = prefs.edit();
-        editor.putInt("font", Font);
-        editor.commit(); // apply changes
-        
-		editor.putBoolean("opt_changed", true);
-        editor.commit(); // apply changes
-        SelectFontSans (this);
-    }
-    
-    /**
-     * Change font to serif.
-     */
-    public void ChFontSerif (View view) {
-    	int Font = 2;
-    	SharedPreferences prefs = getSharedPreferences("com.dtype.writer", MODE_PRIVATE);
-    	SharedPreferences.Editor editor = prefs.edit();
-        editor.putInt("font", Font);
-        editor.commit(); // apply changes
-        
-		editor.putBoolean("opt_changed", true);
-        editor.commit(); // apply changes
-        SelectFontSerif (this);
-    }
-    
-    /**
-     * Change font to mono.
-     */
-    public void ChFontMono (View view) {
-    	int Font = 3;
-    	SharedPreferences prefs = getSharedPreferences("com.dtype.writer", MODE_PRIVATE);
-    	SharedPreferences.Editor editor = prefs.edit();
-        editor.putInt("font", Font);
-        editor.commit(); // apply changes
-        
-		editor.putBoolean("opt_changed", true);
-        editor.commit(); // apply changes
-        SelectFontMono (this);
-    }
-    
-    /**
-     * Change font size to big.
-     */
-    public void ChSizeSmall (View view) {
-    	int Size = 1;
-    	SharedPreferences prefs = getSharedPreferences("com.dtype.writer", MODE_PRIVATE);
-    	SharedPreferences.Editor editor = prefs.edit();
-        editor.putInt("size", Size);
-        editor.commit(); // apply changes
-        
-		editor.putBoolean("opt_changed", true);
-        editor.commit(); // apply changes
-        SelectSizeSmall (this);
     }
 
     /**
-     * Change font size to medium.
+     * This method changes the <code>int</code> value in the database, representing the main font
+     * of the {@link net.wswld.dtype.writer.DTypeActivity}.
+     * @param v view.
      */
-    public void ChSizeMid (View view) {
-    	int Size = 2;
-    	SharedPreferences prefs = getSharedPreferences("com.dtype.writer", MODE_PRIVATE);
-    	SharedPreferences.Editor editor = prefs.edit();
-        editor.putInt("size", Size);
+    public void changeFont(View v) {
+
+        SharedPreferences prefs = getSharedPreferences("com.dtype.writer", MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+
+        int Font = 0;
+
+        switch (v.getId()) {
+            case (R.id.BtFontSans):
+                Font = 1;
+                break;
+            case (R.id.BtFontSerif):
+                Font = 2;
+                break;
+            case (R.id.BtFontMono):
+                Font = 3;
+                break;
+        }
+
+        selectedFont(Font, this);
+
+        editor.putInt("font", Font);
+        editor.putBoolean("opt_changed", true);
         editor.commit(); // apply changes
-        
-		editor.putBoolean("opt_changed", true);
-        editor.commit(); // apply changes
-        SelectSizeMid (this);
     }
-    
+
     /**
-     * Change font size to small.
+     * This method changes the <code>int</code> value in the database, representing the font size
+     * of the {@link net.wswld.dtype.writer.DTypeActivity}.
+     * @param v view.
      */
-    public void ChSizeBig (View view) {
-    	int Size = 3;
-    	SharedPreferences prefs = getSharedPreferences("com.dtype.writer", MODE_PRIVATE);
-    	SharedPreferences.Editor editor = prefs.edit();
+    public void changeSize(View v) {
+
+        SharedPreferences prefs = getSharedPreferences("com.dtype.writer", MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+
+        int Size = 0;
+
+        switch (v.getId()) {
+            case (R.id.BtSizeSmall):
+                Size = 1;
+                break;
+            case (R.id.BtSizeMid):
+                Size = 2;
+                break;
+            case (R.id.BtSizeBig):
+                Size = 3;
+                break;
+        }
+
+        selectedSize(Size, this);
+
         editor.putInt("size", Size);
+        editor.putBoolean("opt_changed", true);
         editor.commit(); // apply changes
-        
-		editor.putBoolean("opt_changed", true);
-        editor.commit(); // apply changes
-        SelectSizeBig (this);
     }
-    
+
     /**
-     * Clear text.
+     * Clears the <code>doutput_preserved</code> string in the database, therefore clearing the
+     * <code>EditText</code> field in {@link DTypeActivity}. It also writes the <code>cleared</code>
+     * boolean to notify the {@link DTypeActivity} of the changes.
+     * @param view view.
      */
-    public void ClearText (View view) {
+    public void clearText(View view) {
     	SharedPreferences prefs = getSharedPreferences("com.dtype.writer", MODE_PRIVATE);
     	String dOutput = "";
     	SharedPreferences.Editor editor = prefs.edit();
@@ -248,130 +220,86 @@ public class OptionsActivity extends DTypeActivity {
         editor.putBoolean("cleared", true);
         editor.commit(); // apply changes
     }
-    
+
     /**
-     * goToUrl
+     * Reapplies normal visual styles to all the buttons in the theme row and then applies the
+     * corresponding distinctive style to the selected button.
+     * @param Theme theme integer.
+     * @param optionsActivity activity.
      */
-    private void goToUrl (String url) {
-        Uri uriUrl = Uri.parse(url);
-        Intent launchBrowser = new Intent(Intent.ACTION_VIEW, uriUrl);
-        startActivity(launchBrowser);
+    public void selectedTheme(int Theme, OptionsActivity optionsActivity) {
+        final Button BtThemeGrey = (Button) findViewById(R.id.BtThemeGrey);
+        final Button BtThemeBlue = (Button) findViewById(R.id.BtThemeBlue);
+        final Button BtThemeDark = (Button) findViewById(R.id.BtThemeDark);
+        BtThemeGrey.setBackgroundDrawable(getResources().getDrawable(R.drawable.grey_button_layout));
+        BtThemeBlue.setBackgroundDrawable(getResources().getDrawable(R.drawable.blue_button_layout));
+        BtThemeDark.setBackgroundDrawable(getResources().getDrawable(R.drawable.dark_button_layout));
+
+        switch(Theme) {
+            case(1):
+                BtThemeGrey.setBackgroundDrawable(getResources().getDrawable(R.drawable.grey_button_selected_layout));
+                break;
+            case(2):
+                BtThemeBlue.setBackgroundDrawable(getResources().getDrawable(R.drawable.blue_button_selected_layout));
+                break;
+            case(3):
+                BtThemeDark.setBackgroundDrawable(getResources().getDrawable(R.drawable.dark_button_selected_layout));
+                break;
+        }
     }
-    
-    /**
-     * Implementation of selected state on theme buttons. 
-     * @param optionsActivity
-     */
-	public void SelectThemeGrey (OptionsActivity optionsActivity) {
-		final Button BtThemeGrey = (Button) findViewById(R.id.BtThemeGrey);
-		final Button BtThemeBlue = (Button) findViewById(R.id.BtThemeBlue);
-		final Button BtThemeDark = (Button) findViewById(R.id.BtThemeDark);
-		BtThemeGrey.setBackgroundDrawable(getResources().getDrawable(R.drawable.grey_button_selected_layout));
-		BtThemeBlue.setBackgroundDrawable(getResources().getDrawable(R.drawable.blue_button_layout));
-		BtThemeDark.setBackgroundDrawable(getResources().getDrawable(R.drawable.dark_button_layout));
-	}
 
     /**
-     * Implementation of selected state on theme buttons. 
-     * @param optionsActivity
+     * Reapplies normal visual styles to all the buttons in the font row and then applies the
+     * corresponding distinctive style to the selected button.
+     * @param Font font integer.
+     * @param optionsActivity activity.
      */
-	public void SelectThemeBlue (OptionsActivity optionsActivity) {
-		final Button BtThemeGrey = (Button) findViewById(R.id.BtThemeGrey);
-		final Button BtThemeBlue = (Button) findViewById(R.id.BtThemeBlue);
-		final Button BtThemeDark = (Button) findViewById(R.id.BtThemeDark);
-		BtThemeGrey.setBackgroundDrawable(getResources().getDrawable(R.drawable.grey_button_layout));
-		BtThemeBlue.setBackgroundDrawable(getResources().getDrawable(R.drawable.blue_button_selected_layout));
-		BtThemeDark.setBackgroundDrawable(getResources().getDrawable(R.drawable.dark_button_layout));
-	}
+    public void selectedFont(int Font, OptionsActivity optionsActivity) {
+        final Button BtFontSans = (Button) findViewById(R.id.BtFontSans);
+        final Button BtFontSerif = (Button) findViewById(R.id.BtFontSerif);
+        final Button BtFontMono = (Button) findViewById(R.id.BtFontMono);
+        BtFontSans.setBackgroundDrawable(getResources().getDrawable(R.drawable.grey_button_layout));
+        BtFontSerif.setBackgroundDrawable(getResources().getDrawable(R.drawable.grey_button_layout));
+        BtFontMono.setBackgroundDrawable(getResources().getDrawable(R.drawable.grey_button_layout));
+
+        switch(Font) {
+            case(1):
+                BtFontSans.setBackgroundDrawable(getResources().getDrawable(R.drawable.grey_button_selected_layout));
+                break;
+            case(2):
+                BtFontSerif.setBackgroundDrawable(getResources().getDrawable(R.drawable.grey_button_selected_layout));
+                break;
+            case(3):
+                BtFontMono.setBackgroundDrawable(getResources().getDrawable(R.drawable.grey_button_selected_layout));
+                break;
+        }
+    }
 
     /**
-     * Implementation of selected state on theme buttons. 
-     * @param optionsActivity
+     * Reapplies normal visual styles to all the buttons in the size row and then applies the
+     * corresponding distinctive style to the selected button.
+     * @param Size size integer.
+     * @param optionsActivity activity.
      */
-	public void SelectThemeDark (OptionsActivity optionsActivity) {
-		final Button BtThemeGrey = (Button) findViewById(R.id.BtThemeGrey);
-		final Button BtThemeBlue = (Button) findViewById(R.id.BtThemeBlue);
-		final Button BtThemeDark = (Button) findViewById(R.id.BtThemeDark);
-		BtThemeGrey.setBackgroundDrawable(getResources().getDrawable(R.drawable.grey_button_layout));
-		BtThemeBlue.setBackgroundDrawable(getResources().getDrawable(R.drawable.blue_button_layout));
-		BtThemeDark.setBackgroundDrawable(getResources().getDrawable(R.drawable.dark_button_selected_layout));
-	}
-	
-    /**
-     * Implementation of selected state on theme buttons. 
-     * @param optionsActivity
-     */
-	public void SelectFontSans (OptionsActivity optionsActivity) {
-		final Button BtFontSans = (Button) findViewById(R.id.BtFontSans);
-		final Button BtFontSerif = (Button) findViewById(R.id.BtFontSerif);
-		final Button BtFontMono = (Button) findViewById(R.id.BtFontMono);
-		BtFontSans.setBackgroundDrawable(getResources().getDrawable(R.drawable.grey_button_selected_layout));
-		BtFontSerif.setBackgroundDrawable(getResources().getDrawable(R.drawable.grey_button_layout));
-		BtFontMono.setBackgroundDrawable(getResources().getDrawable(R.drawable.grey_button_layout));
-	}
-	
-    /**
-     * Implementation of selected state on theme buttons. 
-     * @param optionsActivity
-     */
-	public void SelectFontSerif (OptionsActivity optionsActivity) {
-		final Button BtFontSans = (Button) findViewById(R.id.BtFontSans);
-		final Button BtFontSerif = (Button) findViewById(R.id.BtFontSerif);
-		final Button BtFontMono = (Button) findViewById(R.id.BtFontMono);
-		BtFontSans.setBackgroundDrawable(getResources().getDrawable(R.drawable.grey_button_layout));
-		BtFontSerif.setBackgroundDrawable(getResources().getDrawable(R.drawable.grey_button_selected_layout));
-		BtFontMono.setBackgroundDrawable(getResources().getDrawable(R.drawable.grey_button_layout));
-	}
+    public void selectedSize(int Size, OptionsActivity optionsActivity) {
+        final Button BtSizeSmall = (Button) findViewById(R.id.BtSizeSmall);
+        final Button BtSizeMid = (Button) findViewById(R.id.BtSizeMid);
+        final Button BtSizeBig = (Button) findViewById(R.id.BtSizeBig);
+        BtSizeSmall.setBackgroundDrawable(getResources().getDrawable(R.drawable.grey_button_layout));
+        BtSizeMid.setBackgroundDrawable(getResources().getDrawable(R.drawable.grey_button_layout));
+        BtSizeBig.setBackgroundDrawable(getResources().getDrawable(R.drawable.grey_button_layout));
 
-    /**
-     * Implementation of selected state on theme buttons. 
-     * @param optionsActivity
-     */
-	public void SelectFontMono (OptionsActivity optionsActivity) {
-		final Button BtFontSans = (Button) findViewById(R.id.BtFontSans);
-		final Button BtFontSerif = (Button) findViewById(R.id.BtFontSerif);
-		final Button BtFontMono = (Button) findViewById(R.id.BtFontMono);
-		BtFontSans.setBackgroundDrawable(getResources().getDrawable(R.drawable.grey_button_layout));
-		BtFontSerif.setBackgroundDrawable(getResources().getDrawable(R.drawable.grey_button_layout));
-		BtFontMono.setBackgroundDrawable(getResources().getDrawable(R.drawable.grey_button_selected_layout));
-	}
+        switch(Size) {
+            case(1):
+                BtSizeSmall.setBackgroundDrawable(getResources().getDrawable(R.drawable.grey_button_selected_layout));
+                break;
+            case(2):
+                BtSizeMid.setBackgroundDrawable(getResources().getDrawable(R.drawable.grey_button_selected_layout));
+                break;
+            case(3):
+                BtSizeBig.setBackgroundDrawable(getResources().getDrawable(R.drawable.grey_button_selected_layout));
+                break;
+        }
+    }
 
-    /**
-     * Implementation of selected state on theme buttons. 
-     * @param optionsActivity
-     */
-	public void SelectSizeSmall (OptionsActivity optionsActivity) {
-		final Button BtSizeSmall = (Button) findViewById(R.id.BtSizeSmall);
-		final Button BtSizeMid = (Button) findViewById(R.id.BtSizeMid);
-		final Button BtSizeBig = (Button) findViewById(R.id.BtSizeBig);
-		BtSizeSmall.setBackgroundDrawable(getResources().getDrawable(R.drawable.grey_button_selected_layout));
-		BtSizeMid.setBackgroundDrawable(getResources().getDrawable(R.drawable.grey_button_layout));
-		BtSizeBig.setBackgroundDrawable(getResources().getDrawable(R.drawable.grey_button_layout));
-	}
-	
-    /**
-     * Implementation of selected state on theme buttons. 
-     * @param optionsActivity
-     */
-	public void SelectSizeMid (OptionsActivity optionsActivity) {
-		final Button BtSizeSmall = (Button) findViewById(R.id.BtSizeSmall);
-		final Button BtSizeMid = (Button) findViewById(R.id.BtSizeMid);
-		final Button BtSizeBig = (Button) findViewById(R.id.BtSizeBig);
-		BtSizeSmall.setBackgroundDrawable(getResources().getDrawable(R.drawable.grey_button_layout));
-		BtSizeMid.setBackgroundDrawable(getResources().getDrawable(R.drawable.grey_button_selected_layout));
-		BtSizeBig.setBackgroundDrawable(getResources().getDrawable(R.drawable.grey_button_layout));
-	}
-
-    /**
-     * Implementation of selected state on theme buttons. 
-     * @param optionsActivity
-     */
-	public void SelectSizeBig (OptionsActivity optionsActivity) {
-		final Button BtSizeSmall = (Button) findViewById(R.id.BtSizeSmall);
-		final Button BtSizeMid = (Button) findViewById(R.id.BtSizeMid);
-		final Button BtSizeBig = (Button) findViewById(R.id.BtSizeBig);
-		BtSizeSmall.setBackgroundDrawable(getResources().getDrawable(R.drawable.grey_button_layout));
-		BtSizeMid.setBackgroundDrawable(getResources().getDrawable(R.drawable.grey_button_layout));
-		BtSizeBig.setBackgroundDrawable(getResources().getDrawable(R.drawable.grey_button_selected_layout));
-	}
 }
