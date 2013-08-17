@@ -205,15 +205,6 @@ public class OptionsActivity extends DTypeActivity {
     }
 
     /**
-     * This methods opens the URL of the page for adding new bugs to the tracking system in the
-     * default browser by calling {@link #gotoURL(String) gotoURL()} method.
-     * @param view view.
-     */
-    public void addBug (View view) {
-        gotoURL( "https://github.com/wswld/dtype/issues/new");
-    };
-
-    /**
      * Clears the <code>doutput_preserved</code> string in the database, therefore clearing the
      * <code>EditText</code> field in {@link DTypeActivity}. It also writes the <code>cleared</code>
      * boolean to notify the {@link DTypeActivity} of the changes.
@@ -228,16 +219,6 @@ public class OptionsActivity extends DTypeActivity {
         
         editor.putBoolean("cleared", true);
         editor.commit(); // apply changes
-    }
-
-    /**
-     * Launches the default browser and then opens the passed URL.
-     * @param url the URL.
-     */
-    private void gotoURL (String url) {
-        Uri uriUrl = Uri.parse(url);
-        Intent launchBrowser = new Intent(Intent.ACTION_VIEW, uriUrl);
-        startActivity(launchBrowser);
     }
 
     /**

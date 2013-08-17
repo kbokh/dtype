@@ -231,17 +231,5 @@
 	    </LinearLayout>
 
 	</LinearLayout>
-		<Button
-		    android:id="@+id/button_report"
-		    android:layout_width="wrap_content"
-		    android:layout_height="wrap_content"
-		    android:layout_gravity="center|bottom"
-		    android:autoLink="web"
-		    android:clickable="true"
-		    android:linksClickable="true"
-		    android:onClick="addBug"
-		    android:text="@string/report" 
-		    android:layout_margin="2.5dp"
-		    android:background="@drawable/grey_button_layout"/>
 
 </FrameLayout>
